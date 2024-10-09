@@ -1,6 +1,8 @@
+from queue import Queue
 import wikipediaapi
 import time
 
+#setup stuff
 user_agent = "wiki_code (isabella.ann.swan@gmail.com)"
 wiki = wikipediaapi.Wikipedia(user_agent, "en")
 
@@ -15,16 +17,45 @@ def fetch_links(page):
     return links_list
 
 def wikipedia_game_solver(start_page, target_page):
-    links = fetch_links(start_page)
+    print("working on it.....")
+    start_time = time.time()
 
-    for link in links:
-        if link == target_page:
-            print("complete")
-        else :
-            print("fail")
+    queue = Queue()
+    visted = set()
+    parent = {}
 
+    queue.put(start_page.title)
+    visted.add(start_page.title)
+
+    while not queue.empty():
+        current_page_title = queue.get()
+        if current_page_title == target_page.title:
+            break
+
+        current_page = wiki.page(current_page_title)
+        links = fetch_links(current_page)
+
+        for link in links:
+            if link not in visted:
+                queue.put(link)
+                visted.add(link)
+                parent[link] = current_page_title
+
+    path = []
+    page_title = target_page.title
+    while page_title != start_page.title:
+        path.append(page_title)
+        page_title = parent[page_title]
+
+    path.append(start_page.title)
+    path.reverse()
+
+    end_time = time.time()
+    print("this algoritn took", end_time - start_time, "seconds.")
+    return path
 
 # start and end pages for our wikipedia game solver
 start_page = wiki.page("Pasadena High School (California)")
-target_page = wiki.page("Rose Parade")
-wikipedia_game_solver(start_page, target_page)
+target_page = wiki.page("World War II")
+path = wikipedia_game_solver(start_page, target_page)
+print(path)
